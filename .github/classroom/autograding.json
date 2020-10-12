@@ -1,0 +1,14 @@
+{
+  "tests": [
+    {
+      "name": "Required Tests",
+      "setup": "echo \"*** Setup ***\" && env HOME=\"$(pwd)\" cabal update && env HOME=\"$(pwd)\" cabal install --lib random && env HOME=\"$(pwd)\" cabal install --lib timeit && wget -q http://user.it.uu.se/~tjawe125/reversi-2020/reversi.tgz && tar -xf reversi.tgz && echo \"*** Compilation ***\" && touch *.hi *.o && env HOME=\"$(pwd)\" ghc main.hs && echo \"*** Testing ***\"",
+      "run": "env LC_ALL=en_US.utf8 ./main",
+      "input": "",
+      "output": "The game ended normally.",
+      "comparison": "included",
+      "timeout": 10,
+      "points": null
+    }
+  ]
+}
