@@ -133,4 +133,4 @@ think (State board player) move seconds
      in ((Move putPos), State (put board putPos player) player)
   where
     nstate = newState (State board player) move
-    ops = options (State board player)
+    ops = options nstate
