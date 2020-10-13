@@ -120,13 +120,8 @@ initial player = State initialBoard player
 newState :: State -> Reversi.Move -> State
 newState state Pass = state
 newState (State board player) (Move pos) =
-  State
-    ( replaceAt
-        pos
-        (pos, playerCellState (otherPlayer player))
-        board
-    )
-    player
+  let nboard = put board pos (otherPlayer player)
+   in (State nboard player)
 
 {- (Remember to provide a complete function specification.)
  -}
