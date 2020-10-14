@@ -192,9 +192,6 @@ boardValue board player =
     0
     board
 
-bestOption :: [Cell] -> Cell
-bestOption cells = head (sortOn (\(pos, _) -> 10 - niceValue pos) cells)
-
 initialBoard =
   zip
     [0 .. 63]
@@ -212,5 +209,5 @@ think (State board player) move seconds =
   (myMove, State myMovedBoard player)
   where
     opponentMovedBoard = makeMove board move (opponent player)
-    (myMove, _) = minMax opponentMovedBoard player 4 player
+    (myMove, _) = minMax opponentMovedBoard player 7 player
     myMovedBoard = makeMove opponentMovedBoard myMove player
