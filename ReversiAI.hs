@@ -182,12 +182,9 @@ boardValue :: [Cell] -> Player -> Int
 boardValue board player =
   foldl
     ( \acc (pos, state) ->
-        if empty (pos, state)
-          then acc
-          else
-            if owns player (pos, state)
-              then acc + niceValue pos
-              else acc
+        if owns player (pos, state)
+          then acc + niceValue pos
+          else acc
     )
     0
     board
