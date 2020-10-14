@@ -2,6 +2,7 @@
 module ReversiAI (State, author, nickname, initial, think) where
 
 import Data.List
+import Data.Maybe
 import Reversi
 
 -- /\/\/\ DO NOT MODIFY THE PRECEDING LINES /\/\/\
@@ -40,7 +41,18 @@ playerCellState Black = B
 playerCellState White = W
 
 put :: [Cell] -> Int -> Player -> [Cell]
-put board pos player = replaceAt pos (pos, playerCellState player) board
+put board pos player =
+  foldl (\b (pos, _) -> replaceAt pos (pos, playerCellState player) b) board shouldFlipCells
+  where
+    lines = map (scan board pos) allDirs
+    shouldFlipCells = (pos, playerCellState player) : concatMap (\line -> getShouldFlip line player) lines
+
+getShouldFlip :: [Cell] -> Player -> [Cell]
+getShouldFlip line player
+  | isJust found = take (fromJust found) line
+  | otherwise = []
+  where
+    found = findIndex (owns player) line
 
 nextPos :: Int -> (Int, Int) -> Int
 nextPos pos (x, y)
