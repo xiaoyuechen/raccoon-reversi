@@ -169,11 +169,11 @@ isCloseToCorner pos
 
 niceValue :: Int -> Int
 niceValue pos
-  | isInCorner pos = 10
-  | isCloseToCorner pos = -10
-  | isOnEdge pos = 8
-  | row == 1 || row == 6 || col == 1 || col == 6 = -5
-  | otherwise = 1
+  | isInCorner pos = 999
+  | isCloseToCorner pos = -5
+  | isOnEdge pos = 500
+  | row == 1 || row == 6 || col == 1 || col == 6 = 0
+  | otherwise = 2
   where
     row = quot pos 8
     col = pos - row * 8
@@ -209,5 +209,5 @@ think (State board player) move seconds =
   (myMove, State myMovedBoard player)
   where
     opponentMovedBoard = makeMove board move (opponent player)
-    (myMove, _) = minMax opponentMovedBoard player 5 player
+    (myMove, _) = minMax opponentMovedBoard player 4 player
     myMovedBoard = makeMove opponentMovedBoard myMove player
