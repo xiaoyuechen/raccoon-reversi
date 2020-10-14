@@ -130,7 +130,8 @@ think (State board player) move seconds
   | length ops == 0 = (Pass, nstate)
   | otherwise =
     let putPos = fst (head ops)
-     in ((Move putPos), State (put board putPos player) player)
+        (State nboard _) = nstate 
+     in ((Move putPos), State (put nboard putPos player) player)
   where
     nstate = newState (State board player) move
     ops = options nstate
