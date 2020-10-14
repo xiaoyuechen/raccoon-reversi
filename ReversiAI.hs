@@ -105,7 +105,7 @@ cellOption board (pos, _) player =
         )
         lines
 
-options (State board player) = nub (concatMap (\pos -> cellOption board (board !! pos) player) [0 .. 63])
+options board player = nub (concatMap (\pos -> cellOption board (board !! pos) player) [0 .. 63])
 
 initialBoard =
   zip
@@ -117,21 +117,19 @@ initialBoard =
 initial :: Reversi.Player -> State
 initial player = State initialBoard player
 
-newState :: State -> Reversi.Move -> State
-newState state Pass = state
-newState (State board player) (Move pos) =
-  let nboard = put board pos (otherPlayer player)
-   in (State nboard player)
-
 {- (Remember to provide a complete function specification.)
  -}
 think :: State -> Reversi.Move -> Double -> (Reversi.Move, State)
-think (State board player) move seconds
-  | length ops == 0 = (Pass, nstate)
-  | otherwise =
-    let putPos = fst (head ops)
-        (State nboard _) = nstate 
-     in ((Move putPos), State (put nboard putPos player) player)
+think (State board player) (Pass) seconds
+  | length ops == 0 = (Pass, (State board player))
+  | otherwise = ((Move move), (State (put board move player) player))
   where
-    nstate = newState (State board player) move
-    ops = options nstate
+    ops = options board player
+    move = fst (head ops)
+think (State board player) (Move pos) seconds
+  | length ops == 0 = (Pass, (State opponentMovedBoard player))
+  | otherwise = ((Move putPos), (State (put opponentMovedBoard putPos player) player))
+  where
+    opponentMovedBoard = put board pos (otherPlayer player)
+    ops = options opponentMovedBoard player
+    putPos = fst (head ops)
