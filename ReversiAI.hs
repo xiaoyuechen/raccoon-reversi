@@ -129,6 +129,35 @@ initialBoard =
 initial :: Reversi.Player -> State
 initial player = State initialBoard player
 
+isOnEdge pos =
+  row == 0 || row == 7 || col == 0 || col == 7
+  where
+    row = quot pos 8
+    col = pos - row * 8
+
+isInCorner 0 = True
+isInCorner 7 = True
+isInCorner 56 = True
+isInCorner 63 = True
+isInCorner _ = False
+
+getEdgeCells :: [Cell] -> [Cell]
+getEdgeCells cells = filter (\(pos, _) -> isOnEdge pos) cells
+
+getCornerCells :: [Cell] -> [Cell]
+getCornerCells cells = filter (\(pos, _) -> isInCorner pos) cells
+
+bestOption :: [Cell] -> Cell
+bestOption cells
+  | length silver > 0 =
+    if length gold > 0
+      then head gold
+      else head silver
+  | otherwise = head cells
+  where
+    silver = getEdgeCells cells
+    gold = getCornerCells silver
+
 {- (Remember to provide a complete function specification.)
  -}
 think :: State -> Reversi.Move -> Double -> (Reversi.Move, State)
@@ -137,11 +166,11 @@ think (State board player) (Pass) seconds
   | otherwise = ((Move move), (State (put board move player) player))
   where
     ops = options board player
-    move = fst (head ops)
+    move = fst (bestOption ops)
 think (State board player) (Move pos) seconds
   | length ops == 0 = (Pass, (State opponentMovedBoard player))
-  | otherwise = ((Move putPos), (State (put opponentMovedBoard putPos player) player))
+  | otherwise = ((Move move), (State (put opponentMovedBoard move player) player))
   where
     opponentMovedBoard = put board pos (otherPlayer player)
     ops = options opponentMovedBoard player
-    putPos = fst (head ops)
+    move = fst (bestOption ops)
