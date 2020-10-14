@@ -187,7 +187,7 @@ boardValue board player =
           else
             if owns player (pos, state)
               then acc + niceValue pos
-              else acc - niceValue pos
+              else acc
     )
     0
     board
@@ -209,5 +209,5 @@ think (State board player) move seconds =
   (myMove, State myMovedBoard player)
   where
     opponentMovedBoard = makeMove board move (opponent player)
-    (myMove, _) = minMax opponentMovedBoard player 5 player
+    (myMove, _) = minMax opponentMovedBoard player 4 player
     myMovedBoard = makeMove opponentMovedBoard myMove player
