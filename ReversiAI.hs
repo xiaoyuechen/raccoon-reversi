@@ -32,9 +32,9 @@ replaceAt n v (x : xs)
   | n == 0 = v : xs
   | otherwise = x : replaceAt (n -1) v xs
 
-otherPlayer :: Player -> Player
-otherPlayer Black = White
-otherPlayer White = Black
+opponent :: Player -> Player
+opponent Black = White
+opponent White = Black
 
 playerCellState :: Player -> CellState
 playerCellState Black = B
@@ -93,18 +93,20 @@ scanImpl board (pos, state) dir = (pos, state) : (scanImpl board ncell dir)
   where
     ncell = nextCell board pos dir
 
-lineOption :: [Cell] -> Player -> (Bool, Cell)
-lineOption (_ : []) _ = (False, dummyCell)
+lineOption :: [Cell] -> Player -> (Maybe Int)
+lineOption (_ : []) _ = Nothing
 lineOption line player = lineOptionImpl line player
 
-lineOptionImpl :: [Cell] -> Player -> (Bool, Cell)
-lineOptionImpl [] _ = (False, dummyCell)
-lineOptionImpl (cell : []) _ = (empty cell, cell)
+lineOptionImpl :: [Cell] -> Player -> (Maybe Int)
+lineOptionImpl [] _ = Nothing
+lineOptionImpl (cell : []) _
+  | empty cell = Just (fst cell)
+  | otherwise = Nothing
 lineOptionImpl (cell : tail) player
-  | owns player cell = (False, dummyCell)
+  | owns player cell = Nothing
   | otherwise = lineOptionImpl tail player
 
-cellOption :: [Cell] -> Cell -> Player -> [Cell]
+cellOption :: [Cell] -> Cell -> Player -> [Int]
 cellOption _ (_, E) _ = []
 cellOption _ (_, B) White = []
 cellOption _ (_, W) Black = []
@@ -112,22 +114,39 @@ cellOption board (pos, _) player =
   let lines = map (scan board pos) allDirs
    in concatMap
         ( \line ->
-            let option = lineOption line player
-             in if fst option then [snd option] else []
+            let lineop = lineOption line player
+             in if isJust lineop then [fromJust lineop] else []
         )
         lines
 
-options board player = nub (concatMap (\pos -> cellOption board (board !! pos) player) [0 .. 63])
+options board player =
+  nub
+    ( concatMap
+        (\pos -> cellOption board (board !! pos) player)
+        [0 .. 63]
+    )
 
-initialBoard =
-  zip
-    [0 .. 63]
-    ((replicate 27 E) ++ [W, B] ++ (replicate 6 E) ++ [B, W] ++ (replicate 27 E))
+makeMove :: [Cell] -> Move -> Player -> [Cell]
+makeMove board Pass _ = board
+makeMove board (Move pos) player = put board pos player
 
-{- (Remember to provide a complete function specification.)
- -}
-initial :: Reversi.Player -> State
-initial player = State initialBoard player
+minMax :: [Cell] -> Player -> Int -> Player -> (Move, Int)
+minMax board player depth thisAIPlayer
+  | null ops = (Pass, bv)
+  | depth == 0 = (Move (head ops), bv)
+  | otherwise =
+    let newBoards = map (\pos -> put board pos player) ops
+        values = map snd (map (\b -> minMax b (opponent player) (depth -1) thisAIPlayer) newBoards)
+     in foldl1
+          ( \(rm, rv) (m, v) ->
+              if player == thisAIPlayer
+                then if v > rv then (m, v) else (rm, rv)
+                else if v < rv then (m, v) else (rm, rv)
+          )
+          (zip (map Move ops) values)
+  where
+    ops = options board player
+    bv = boardValue board player
 
 isOnEdge pos =
   row == 0 || row == 7 || col == 0 || col == 7
@@ -148,39 +167,50 @@ isCloseToCorner pos
   | pos == 55 || pos == 62 || pos == 54 = True
   | otherwise = False
 
-getEdgeCells :: [Cell] -> [Cell]
-getEdgeCells cells = filter (\(pos, _) -> isOnEdge pos) cells
-
-getCornerCells :: [Cell] -> [Cell]
-getCornerCells cells = filter (\(pos, _) -> isInCorner pos) cells
-
 niceValue :: Int -> Int
 niceValue pos
   | isInCorner pos = 10
   | isCloseToCorner pos = 0
-  | isOnEdge pos = 5
+  | isOnEdge pos = 6
   | row == 1 || row == 6 || col == 1 || col == 6 = 1
   | otherwise = 2
   where
     row = quot pos 8
     col = pos - row * 8
 
+boardValue :: [Cell] -> Player -> Int
+boardValue board player =
+  foldl
+    ( \acc (pos, state) ->
+        if empty (pos, state)
+          then acc
+          else
+            if owns player (pos, state)
+              then acc + niceValue pos
+              else acc - niceValue pos
+    )
+    0
+    board
+
 bestOption :: [Cell] -> Cell
 bestOption cells = head (sortOn (\(pos, _) -> 10 - niceValue pos) cells)
+
+initialBoard =
+  zip
+    [0 .. 63]
+    ((replicate 27 E) ++ [W, B] ++ (replicate 6 E) ++ [B, W] ++ (replicate 27 E))
+
+{- (Remember to provide a complete function specification.)
+ -}
+initial :: Reversi.Player -> State
+initial player = State initialBoard player
 
 {- (Remember to provide a complete function specification.)
  -}
 think :: State -> Reversi.Move -> Double -> (Reversi.Move, State)
-think (State board player) (Pass) seconds
-  | length ops == 0 = (Pass, (State board player))
-  | otherwise = ((Move move), (State (put board move player) player))
+think (State board player) move seconds =
+  (myMove, State myMovedBoard player)
   where
-    ops = options board player
-    move = fst (bestOption ops)
-think (State board player) (Move pos) seconds
-  | length ops == 0 = (Pass, (State opponentMovedBoard player))
-  | otherwise = ((Move move), (State (put opponentMovedBoard move player) player))
-  where
-    opponentMovedBoard = put board pos (otherPlayer player)
-    ops = options opponentMovedBoard player
-    move = fst (bestOption ops)
+    opponentMovedBoard = makeMove board move (opponent player)
+    (myMove, _) = minMax opponentMovedBoard player 4 player
+    myMovedBoard = makeMove opponentMovedBoard myMove player
