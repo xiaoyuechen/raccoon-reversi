@@ -157,12 +157,16 @@ getCornerCells cells = filter (\(pos, _) -> isInCorner pos) cells
 niceValue :: Int -> Int
 niceValue pos
   | isInCorner pos = 10
-  | isOnEdge pos && not (isCloseToCorner pos) = 5
   | isCloseToCorner pos = 0
+  | isOnEdge pos = 5
+  | row == 1 || row == 6 || col == 1 || col == 6 = 1
   | otherwise = 2
+  where
+    row = quot pos 8
+    col = pos - row * 8
 
 bestOption :: [Cell] -> Cell
-bestOption cells = head (sortOn (\(pos, _) -> - niceValue pos) cells)
+bestOption cells = head (sortOn (\(pos, _) -> 10 - niceValue pos) cells)
 
 {- (Remember to provide a complete function specification.)
  -}
