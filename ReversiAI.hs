@@ -162,7 +162,7 @@ niceValue pos
   | otherwise = 2
 
 bestOption :: [Cell] -> Cell
-bestOption cells = head (sortOn (\(pos, _) -> niceValue pos) cells)
+bestOption cells = head (sortOn (\(pos, _) -> - niceValue pos) cells)
 
 {- (Remember to provide a complete function specification.)
  -}
