@@ -141,22 +141,28 @@ isInCorner 56 = True
 isInCorner 63 = True
 isInCorner _ = False
 
+isCloseToCorner pos
+  | pos == 1 || pos == 8 || pos == 9 = True
+  | pos == 6 || pos == 15 || pos == 14 = True
+  | pos == 48 || pos == 57 || pos == 49 = True
+  | pos == 55 || pos == 62 || pos == 54 = True
+  | otherwise = False
+
 getEdgeCells :: [Cell] -> [Cell]
 getEdgeCells cells = filter (\(pos, _) -> isOnEdge pos) cells
 
 getCornerCells :: [Cell] -> [Cell]
 getCornerCells cells = filter (\(pos, _) -> isInCorner pos) cells
 
+niceValue :: Int -> Int
+niceValue pos
+  | isInCorner pos = 10
+  | isOnEdge pos && not (isCloseToCorner pos) = 5
+  | isCloseToCorner pos = 0
+  | otherwise = 2
+
 bestOption :: [Cell] -> Cell
-bestOption cells
-  | length silver > 0 =
-    if length gold > 0
-      then head gold
-      else head silver
-  | otherwise = head cells
-  where
-    silver = getEdgeCells cells
-    gold = getCornerCells silver
+bestOption cells = head (sortOn (\(pos, _) -> niceValue pos) cells)
 
 {- (Remember to provide a complete function specification.)
  -}
