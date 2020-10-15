@@ -167,12 +167,33 @@ isCloseToCorner pos
   | pos == 55 || pos == 62 || pos == 54 = True
   | otherwise = False
 
-niceValue :: Int -> Int
-niceValue pos
+neighbourCorner pos
+  | pos == 1 || pos == 8 || pos == 9 = 0
+  | pos == 6 || pos == 15 || pos == 14 = 7
+  | pos == 48 || pos == 57 || pos == 49 = 56
+  | pos == 55 || pos == 62 || pos == 54 = 63
+
+neighbourEdge pos
+  | col == 1 = pos - 1
+  | col == 6 = pos + 1
+  | row == 1 = (row - 1) * 8 + col
+  | row == 6 = (row + 1) * 8 + col
+  where
+    row = quot pos 8
+    col = pos - row * 8
+
+niceValue :: [Cell] -> Int -> Player -> Int
+niceValue board pos player
   | isInCorner pos = 999
-  | isCloseToCorner pos = -10
+  | isCloseToCorner pos =
+    if owns player (board !! (neighbourCorner pos))
+      then 20
+      else -10
   | isOnEdge pos = 10
-  | row == 1 || row == 6 || col == 1 || col == 6 = 1
+  | row == 1 || row == 6 || col == 1 || col == 6 =
+    if owns player (board !! (neighbourEdge pos))
+      then 5
+      else 0
   | otherwise = 2
   where
     row = quot pos 8
@@ -183,7 +204,7 @@ boardValue board player =
   foldl
     ( \acc (pos, state) ->
         if owns player (pos, state)
-          then acc + niceValue pos
+          then acc + niceValue board pos player
           else acc
     )
     0
