@@ -7,19 +7,44 @@ import Reversi
 
 -- /\/\/\ DO NOT MODIFY THE PRECEDING LINES /\/\/\
 
-{- (Remember to provide a brief (about 100-500 words) description of
-   your implementation.)
+{- Game Logic
+   The game state consists of a board and a player.
+   The board's data structure is a list of cells.
+   A cell has an index to identify itself and a state to show ownership
+   Everytime when a move is given, makeMove is called. It takes the original board,
+   the move, and the player who made the move and returns the new board.
+
+   AI
+   The AI fist scan the board to see what options it has.
+   This is done by scanning towards 8 directions of every cell it owns.
+   After options are known, a minMax algorithm with a depth limit is used to decide the best option.
+   In the minMax algorithm, an evaluation algorithm first calculates the "nice value" of each cell,
+   them sum them up as the board value. This board value is used by minMax.
+   The AI call makeMove to update the board with the best option given by minMax.
+
+   References
+   The "nive value" is inspired by the region graph at: http://mnemstudio.org/game-reversi-example-2.htm
+   The minMax algorithm is inspired by the course example code at:
+   https://uppsala.instructure.com/courses/22500/files/1134891?module_item_id=104831
  -}
 
+{- A cell has 3 states, E (empty), B (owned by Black) and W (owned by White)
+ -}
 data CellState = E | B | W
   deriving (Eq, Show)
 
+{- A cell is a tuple. Int used to identify itself, and CellState used to show ownership
+ -}
 type Cell = (Int, CellState)
 
--- the internal state of your AI
+{- The internal state of your AI. Contains a list of cells (board) and a player (who I am)
+-}
 data State = State [Cell] Reversi.Player
   deriving (Eq, Show)
 
+{- The direction for line scanning. Only have these 8 values:
+   (-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)
+ -}
 type Direction = (Int, Int)
 
 author :: String
@@ -28,18 +53,47 @@ author = "Xiaoyue Chen"
 nickname :: String
 nickname = "Raccoon"
 
+{- replaceAt n v l
+   Replace the list element at index with a value
+   PRE: non empty list
+   RETURNS: a new list with replaced values
+   EXAMPLES: replaceAt 1 666 [0, 0, 0] == [0, 666, 0]
+ -}
 replaceAt n v (x : xs)
   | n == 0 = v : xs
   | otherwise = x : replaceAt (n -1) v xs
 
+{- opponent player
+   Get the opponent of the player
+   RETURNS: The opponent of the player
+   EXAMPLES: opponent Black == White
+ -}
 opponent :: Player -> Player
 opponent Black = White
 opponent White = Black
 
+{- playerCellState player
+   Get the CellState of the player
+   RETURNS: the CellState of the player
+   EXAMPLES: playerCellState Black == B
+ -}
 playerCellState :: Player -> CellState
 playerCellState Black = B
 playerCellState White = W
 
+{- put board pos player
+   Let player occupy the cell at pos, and flip the cells that should be flipped
+   RETURNS: a new board after putting and flipping
+   EXAMPLES: put initialBoard 26 Black ==
+     [(0,E),(1,E),(2,E),(3,E),(4,E),(5,E),(6,E),(7,E),
+      (8,E),(9,E),(10,E),(11,E),(12,E),(13,E),(14,E),(15,E),
+      (16,E),(17,E),(18,E),(19,E),(20,E),(21,E),(22,E),(23,E),
+      (24,E),(25,E),(26,B),(27,B),(28,B),(29,E),(30,E),(31,E),
+      (32,E),(33,E),(34,E),(35,B),(36,W),(37,E),(38,E),(39,E),
+      (40,E),(41,E),(42,E),(43,E),(44,E),(45,E),(46,E),(47,E),
+      (48,E),(49,E),(50,E),(51,E),(52,E),(53,E),(54,E),(55,E),
+      (56,E),(57,E),(58,E),(59,E),(60,E),(61,E),(62,E),(63,E)]
+ -}
 put :: [Cell] -> Int -> Player -> [Cell]
 put board pos player =
   foldl (\b (pos, _) -> replaceAt pos (pos, playerCellState player) b) board shouldFlipCells
@@ -47,6 +101,9 @@ put board pos player =
     lines = map (scan board pos) allDirs
     shouldFlipCells = (pos, playerCellState player) : concatMap (\line -> getShouldFlip line player) lines
 
+{- getShouldFlip line player
+
+ -}
 getShouldFlip :: [Cell] -> Player -> [Cell]
 getShouldFlip line player
   | isJust found = take (fromJust found) line
@@ -189,7 +246,7 @@ niceValue board pos player
     if owns player (board !! (neighbourCorner pos))
       then 20
       else -20
-  | isOnEdge pos = 10
+  | isOnEdge pos = 8
   | row == 1 || row == 6 || col == 1 || col == 6 =
     if owns player (board !! (neighbourEdge pos))
       then 5
@@ -201,14 +258,15 @@ niceValue board pos player
 
 boardValue :: [Cell] -> Player -> Int
 boardValue board player =
-  foldl
-    ( \acc (pos, state) ->
-        if owns player (pos, state)
-          then acc + niceValue board pos player
-          else acc
-    )
-    0
-    board
+  - length (options board (opponent player)) * 2
+    + foldl
+      ( \acc (pos, state) ->
+          if owns player (pos, state)
+            then acc + niceValue board pos player
+            else acc
+      )
+      0
+      board
 
 initialBoard =
   zip
