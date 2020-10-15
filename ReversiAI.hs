@@ -246,19 +246,19 @@ niceValue board pos player
     if owns player (board !! (neighbourCorner pos))
       then 20
       else -20
-  | isOnEdge pos = 8
+  | isOnEdge pos = 10
   | row == 1 || row == 6 || col == 1 || col == 6 =
     if owns player (board !! (neighbourEdge pos))
-      then 2
+      then 10
       else 0
-  | otherwise = 2
+  | otherwise = 1
   where
     row = quot pos 8
     col = pos - row * 8
 
 boardValue :: [Cell] -> Player -> Int
 boardValue board player =
-  - length (options board (opponent player)) * 3
+  - length (options board (opponent player)) * 2
     + foldl
       ( \acc (pos, state) ->
           if owns player (pos, state)
