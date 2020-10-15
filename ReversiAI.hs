@@ -376,7 +376,7 @@ niceValue board pos player
   | isCloseToCorner pos =
     if owns player (board !! (neighbourCorner pos))
       then 20
-      else -20
+      else -50
   | isOnEdge pos = 10
   | row == 1 || row == 6 || col == 1 || col == 6 =
     if owns player (board !! (neighbourEdge pos))
