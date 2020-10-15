@@ -172,7 +172,7 @@ niceValue pos
   | isInCorner pos = 999
   | isCloseToCorner pos = -10
   | isOnEdge pos = 10
-  | row == 1 || row == 6 || col == 1 || col == 6 = 0
+  | row == 1 || row == 6 || col == 1 || col == 6 = 1
   | otherwise = 2
   where
     row = quot pos 8
