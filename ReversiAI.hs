@@ -279,8 +279,11 @@ makeMove board (Move pos) player = put board pos player
 -- VARIANT: depth
 minMax :: [Cell] -> Player -> Int -> Player -> (Move, Int)
 minMax board player depth thisAIPlayer
-  | null ops = (Pass, bv)
-  | depth == 0 = (Move (head ops), bv)
+  | null ops = (Pass, thisAIPlayerBv)
+  | depth == 0 =
+    if null ops
+      then (Pass, thisAIPlayerBv)
+      else (Move (head ops), thisAIPlayerBv)
   | otherwise =
     let newBoards = map (\pos -> put board pos player) ops
         values = map snd (map (\b -> minMax b (opponent player) (depth -1) thisAIPlayer) newBoards)
@@ -294,6 +297,7 @@ minMax board player depth thisAIPlayer
   where
     ops = options board player
     bv = boardValue board player
+    thisAIPlayerBv = boardValue board thisAIPlayer
 
 {- isOnEdge pos
    If the position is an edge position
