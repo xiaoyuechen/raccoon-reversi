@@ -383,7 +383,7 @@ niceValue board pos player
         emptyCorner = empty cornerCell
      in if isOnEdge pos
           then if ownsCorner then 20 else if not emptyCorner then 50 else -50
-          else if ownsCorner then 10 else if not emptyCorner then 5 else -60
+          else if ownsCorner then -5 else if not emptyCorner then 5 else -60
   | isOnEdge pos = 10
   | row == 1 || row == 6 || col == 1 || col == 6 =
     if owns player (board !! (neighbourEdge pos))
