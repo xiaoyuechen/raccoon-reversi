@@ -406,7 +406,7 @@ niceValue board pos player
  -}
 boardValue :: [Cell] -> Player -> Int
 boardValue board player =
-  - length (options board (opponent player)) * 3
+  - length (options board (opponent player)) * 1
     + foldl
       ( \acc (pos, state) ->
           if owns player (pos, state)
