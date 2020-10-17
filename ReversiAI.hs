@@ -378,9 +378,12 @@ niceValue :: [Cell] -> Int -> Player -> Int
 niceValue board pos player
   | isInCorner pos = 999
   | isCloseToCorner pos =
-    if owns player (board !! (neighbourCorner pos))
-      then 20
-      else -50
+    let cornerCell = board !! (neighbourCorner pos)
+        ownsCorner = owns player cornerCell
+        emptyCorner = empty cornerCell
+     in if isOnEdge pos
+          then if ownsCorner then 20 else if not emptyCorner then 5 else -50
+          else if ownsCorner then 10 else if not emptyCorner then 5 else -60
   | isOnEdge pos = 10
   | row == 1 || row == 6 || col == 1 || col == 6 =
     if owns player (board !! (neighbourEdge pos))
