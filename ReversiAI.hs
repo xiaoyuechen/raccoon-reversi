@@ -283,7 +283,7 @@ minMax board player depth thisAIPlayer
   | depth == 0 =
     if null ops
       then (Pass, bv)
-      else (Move (head ops), bv)
+      else (Move (head ops), boardValue (put board (head ops) player) thisAIPlayer)
   | otherwise =
     let newBoards = map (\pos -> put board pos player) ops
         values = map snd (map (\b -> minMax b (opponent player) (depth -1) thisAIPlayer) newBoards)
